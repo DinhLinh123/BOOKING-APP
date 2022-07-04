@@ -1,12 +1,13 @@
 import "./list.css";
 import Navbar from "../../components/navbar/Navbar";
 import Header from "../../components/header/Header";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { format } from "date-fns";
 import { DateRange } from "react-date-range";
 import SearchItem from "../../components/searchItem/SearchItem";
 import useFetch from "../../hooks/useFetch";
+import axios from "axios";
 
 const List = () => {
   const location = useLocation();
@@ -18,11 +19,35 @@ const List = () => {
   const [max, setMax] = useState(undefined);
 
   const { data, loading, error, reFetch } = useFetch(
-    `/hotels?city=${destination}&min=${min || 0 }&max=${max || 999}`
+    // `/hotels?city=${destination}&min=${min || 0 }&max=${max || 999}`
+    
   );
 
-  const handleClick = () => {
-    reFetch();
+
+  const handleClick = async (e) => {
+    // reFetch();
+    e.preventDefault();
+    try {
+      let res;
+      if(destination?.length ===0){
+        res= await axios.get(`api/hotels`);
+      }else{
+        res= await axios.get(`api/hotels?city=${destination}&min=${min || 0 }&max=${max || 999}`);
+      }
+      if (res.data.isAdmin) {
+        // dispatch({ type: "LOGIN_SUCCESS", payload: res.data.details });
+
+        Navigate("/");
+      } else {
+        // dispatch({
+        //   type: "LOGIN_FAILURE",
+        //   payload: { message: "You are not allowed!" },
+        // });
+      }
+    } catch (err) {
+      // dispatch({ type: "LOGIN_FAILURE", payload: err.response.data });
+      console.log(err)
+    }
   };
 
   return (
@@ -35,7 +60,9 @@ const List = () => {
             <h1 className="lsTitle">Search</h1>
             <div className="lsItem">
               <label>Destination</label>
-              <input placeholder={destination} type="text" />
+              <input placeholder={destination} onChange={(val)=>{
+                setDestination(val.target.value)
+              }} type="text" />
             </div>
             <div className="lsItem">
               <label>Check-in Date</label>
